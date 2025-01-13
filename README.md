@@ -10,6 +10,8 @@ Use firefoxkiller.exe to run the program in the background. You can run it toget
 
 Use firefoxkillercmd.exe to see log files in the terminal.
 
+https://github.com/metaligh/firefoxkiller/releases/tag/1.0
+
 ## Features
 
 - **Idle Detection**: The script uses Windows API to determine the system's idle time (time since the last user interaction such as keyboard or mouse input). If the idle time exceeds a specified threshold, the monitor is considered idle or powered off.
