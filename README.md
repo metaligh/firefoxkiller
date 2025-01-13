@@ -7,6 +7,7 @@ This is a temporary solution, we hope Mozilla team will fix this bug soon.
 This Python script is designed to monitor the activity of the user's system and terminate all running instances of the Firefox browser when the monitor is idle (e.g., powered off or in sleep mode). It logs all actions to the terminal, providing a simple yet effective solution for managing processes based on monitor activity.
 
 Use firefoxkiller.exe to run the program in the background. You can run it together with Windows startup.
+
 Use firefoxkillercmd.exe to see log files in the terminal.
 
 ## Features
