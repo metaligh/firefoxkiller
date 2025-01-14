@@ -1,5 +1,7 @@
 # Monitor Firefox Process on Idle Monitor
 
+![FirefoxKiller](https://i.ibb.co/HPMSxGX/ff.webp)
+
 In Windows 24H2 system process wma.exe along with firefox browser enabled, the wma.exe process starts consuming CPU resources when the screen is turned off or the computer is locked. To prevent this from happening, we close the firefox application if the monitor screen is turned off.
 
 This is a temporary solution, we hope Mozilla team will fix this bug soon.
