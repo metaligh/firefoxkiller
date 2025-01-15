@@ -1,4 +1,4 @@
-# Monitor Firefox Process on Idle Monitor
+# Monitor Firefox Process on Idle Monitor v1.2
 
 ![FirefoxKiller](https://i.ibb.co/6m2DRnS/ff.webp)
 
@@ -10,7 +10,7 @@ Use `firefoxkiller.exe` to run the program in the background. You can configure 
 
 Use `firefoxkillercmd.exe` to view logs in the terminal.
 
-[Release Page](https://github.com/metaligh/firefoxkiller/releases/tag/1.1)
+[Release Page](https://github.com/metaligh/firefoxkiller/releases/tag/1.2)
 
 ## Features
 
