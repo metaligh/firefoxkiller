@@ -16,7 +16,7 @@ Use `firefoxkillercmd.exe` to view logs in the terminal.
 
 - **Monitor Power Settings**: The script listens for power setting changes related to the monitor and system (e.g., screen turning off).
 - **Firefox Process Termination**: When the screen is turned off, the script automatically terminates all running Firefox processes (`firefox.exe`).
-- **Logging**: The script logs important events, including power setting changes and actions taken (such as terminating Firefox processes), into a log file (`test.log`).
+- **Logging**: The script logs important events, including power setting changes and actions taken (such as terminating Firefox processes), into a log file (`firefoxkiller.log`).
 
 ## Requirements
 
