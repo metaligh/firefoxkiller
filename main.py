@@ -1,64 +1,132 @@
-import time
-import psutil
-from datetime import datetime
 import ctypes
+import win32api
+import win32con
+import win32gui
+import time
+import os
+import psutil
+from ctypes import Structure, c_uint, c_void_p, POINTER
+from comtypes import GUID
+import uuid
 
-class LASTINPUTINFO(ctypes.Structure):
-    _fields_ = [("cbSize", ctypes.c_uint), ("dwTime", ctypes.c_uint)]
+PBT_POWERSETTINGCHANGE = 0x8013
 
-def log(message):
-    """Logs messages with a timestamp to the terminal."""
-    print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {message}")
 
-def get_idle_time():
-    """Gets the system idle time in seconds."""
-    lii = LASTINPUTINFO()
-    lii.cbSize = ctypes.sizeof(LASTINPUTINFO)
-    if ctypes.windll.user32.GetLastInputInfo(ctypes.byref(lii)):
-        millis = ctypes.windll.kernel32.GetTickCount() - lii.dwTime
-        return millis / 1000.0
-    else:
-        log("Failed to get the last input time.")
-        return 0
+# Структура для хранения данных, передаваемых через lparam
+class POWERBROADCAST_SETTING(Structure):
+    _fields_ = [("PowerSetting", c_void_p),  # Указатель на GUID настройки
+                ("DataLength", c_uint),  # Длина данных
+                ("Data", c_void_p)]  # Указатель на данные (состояние устройства)
 
-def kill_firefox():
-    """Terminates all Firefox processes if they are running."""
-    firefox_found = False
-    for proc in psutil.process_iter(['name']):
-        try:
-            if proc.info['name'] and "firefox" in proc.info['name'].lower():
+
+def log_info(msg):
+    """Логирование в файл"""
+    print(msg)
+    with open("test.log", "a+") as f:
+        f.write(msg + "\n")
+
+
+def terminate_firefox_processes():
+    """Завершаем все процессы firefox.exe"""
+    for proc in psutil.process_iter(['pid', 'name']):
+        if proc.info['name'].lower() == 'firefox.exe':
+            try:
                 proc.terminate()
-                log(f"Terminated Firefox process with PID {proc.pid}.")
-                firefox_found = True
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            continue
-    if firefox_found:
-        return True
-    return False
+                log_info(f"Terminated firefox process with PID {proc.info['pid']}")
+            except psutil.NoSuchProcess:
+                log_info(f"Process {proc.info['pid']} already terminated.")
 
 
-def monitor():
-    """Main monitoring loop."""
-    log("Starting monitoring.")
-    idle_threshold = 60  # Consider the monitor off if idle for more than 60 seconds
+def process_power_setting_change(lparam):
+    """Обработка изменения настроек питания"""
+    # Попробуем использовать ctypes.cast для приведения lparam к указателю на структуру
+    setting = ctypes.cast(lparam, POINTER(POWERBROADCAST_SETTING))
+
+    # Разбираем данные в lparam
+    power_setting_guid = setting.contents.PowerSetting
+    data_length = setting.contents.DataLength
+    data = setting.contents.Data
+
+    # Преобразуем GUID в строковый вид (если это GUID, а не числовое значение)
+    power_setting_guid_str = str(uuid.UUID(int=power_setting_guid))
+
+    # Логируем GUID
+    log_info(f"Power Setting GUID: {power_setting_guid_str}")
+
+    # Если данные равны 4, экран погас
+    if data_length > 0:
+        if data == 4:
+            log_info("Screen turned off. Terminating firefox processes.")
+            terminate_firefox_processes()  # Закрыть все процессы Firefox
+
+
+def wndproc(hwnd, msg, wparam, lparam):
+    """Обработка сообщений"""
+    if msg == win32con.WM_POWERBROADCAST:
+        if wparam == PBT_POWERSETTINGCHANGE:
+            log_info('Power setting changed...')
+            try:
+                process_power_setting_change(lparam)  # Обработка данных из lparam
+            except Exception as e:
+                log_info(f"Error processing power setting change: {e}")
+                return 0
+
+    return 0
+
+
+def main():
+    """Главная функция для запуска обработчика сообщений"""
+    log_info("*** STARTING ***")
+
+    # Инициализация окна
+    hinst = win32api.GetModuleHandle(None)
+    wndclass = win32gui.WNDCLASS()
+    wndclass.hInstance = hinst
+    wndclass.lpszClassName = "testWindowClass"
+    messageMap = {win32con.WM_POWERBROADCAST: wndproc}
+    wndclass.lpfnWndProc = messageMap
 
     try:
-        while True:
-            idle_time = get_idle_time()
+        myWindowClass = win32gui.RegisterClass(wndclass)
+        hwnd = win32gui.CreateWindowEx(win32con.WS_EX_LEFT,
+                                       myWindowClass,
+                                       "testMsgWindow",
+                                       0,
+                                       0,
+                                       0,
+                                       win32con.CW_USEDEFAULT,
+                                       win32con.CW_USEDEFAULT,
+                                       0,
+                                       0,
+                                       hinst,
+                                       None)
+    except Exception as e:
+        log_info("Exception: %s" % str(e))
 
-            if idle_time > idle_threshold:
-                log("Monitor is off. Checking Firefox.")
-                if kill_firefox():
-                    log("Firefox was found and terminated.")
-                else:
-                    log("Firefox was not found.")
-            else:
-                log("Monitor is on. Doing nothing.")
+    if hwnd is None:
+        log_info("hwnd is none!")
+    else:
+        log_info(f"Window created successfully with hwnd: {hwnd}")
 
-            time.sleep(1)  # Check every second
+    # Регистрация уведомлений для изменений настроек питания (монитор, система и т.д.)
+    register_function = ctypes.windll.user32.RegisterPowerSettingNotification
 
-    except KeyboardInterrupt:
-        log("Monitoring stopped by user.")
+    guids_info = {
+        'GUID_MONITOR_POWER_ON': '{02731015-4510-4526-99e6-e5a17ebd1aea}',
+        'GUID_SYSTEM_AWAYMODE': '{98a7f580-01f7-48aa-9c0f-44352c29e5C0}',
+    }
+
+    hwnd_pointer = ctypes.cast(hwnd, ctypes.c_void_p)  # Используем cast для приведения типа hwnd
+    for name, guid_info in guids_info.items():
+        result = register_function(hwnd_pointer, GUID(guid_info), 0)
+        log_info(f"Registering {name} - result: {result}")
+
+    log_info("\nEntering loop...")
+    # Основной цикл для обработки сообщений
+    while True:
+        win32gui.PumpWaitingMessages()
+        time.sleep(1)
+
 
 if __name__ == "__main__":
-    monitor()
+    main()
