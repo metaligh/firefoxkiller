@@ -12,7 +12,7 @@ Use firefoxkiller.exe to run the program in the background. You can run it toget
 
 Use firefoxkillercmd.exe to see log files in the terminal.
 
-https://github.com/metaligh/firefoxkiller/releases/tag/1.0
+https://github.com/metaligh/firefoxkiller/releases/tag/1.1
 
 ## Features
 
