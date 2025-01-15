@@ -8,6 +8,7 @@ import psutil
 from ctypes import Structure, c_uint, c_void_p, POINTER
 from comtypes import GUID
 import uuid
+from datetime import datetime
 
 PBT_POWERSETTINGCHANGE = 0x8013
 
@@ -20,10 +21,12 @@ class POWERBROADCAST_SETTING(Structure):
 
 
 def log_info(msg):
-    """Логирование в файл"""
-    print(msg)
-    with open("test.log", "a+") as f:
-        f.write(msg + "\n")
+    """Логирование в файл с датой и временем события"""
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_message = f"[{timestamp}] {msg}"
+    print(log_message)
+    with open("firefoxkiller.log", "a+") as f:
+        f.write(log_message + "\n")
 
 
 def terminate_firefox_processes():
