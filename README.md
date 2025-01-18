@@ -2,7 +2,7 @@
 
 ![FirefoxKiller](https://i.ibb.co/6m2DRnS/ff.webp)
 
-In Windows 11 24H2, when Firefox is running, the `wma.exe` process can consume CPU resources when the screen is turned off or the computer is locked. To prevent this, the script monitors power setting changes and terminates all running Firefox instances when the screen turns off.
+In Windows 11 24H2, when Firefox is running, the `dwm.exe` process can consume CPU resources when the screen is turned off or the computer is locked. To prevent this, the script monitors power setting changes and terminates all running Firefox instances when the screen turns off.
 
 This Python script listens for power setting notifications related to the monitor's activity (screen on/off). If the monitor turns off (screen goes to sleep), the script automatically closes all Firefox processes. It logs all actions, providing an easy-to-use solution to manage Firefox based on the monitor’s state.
 
